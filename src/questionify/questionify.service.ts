@@ -1,8 +1,9 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable, StreamableFile } from '@nestjs/common';
 import { MCQ, MCQBuilder } from 'src/modules/classes';
 import subjects from '../subjects/main'
 import * as fs from 'fs'
 import * as path from 'path';
+import { createReadStream } from 'fs';
 
 @Injectable()
 export class QuestionifyService {
@@ -45,5 +46,11 @@ export class QuestionifyService {
         if(!foundSubject) throw new HttpException('The subject code entered is not registered. If you wish to upload it please visit our documentation.', HttpStatus.NOT_FOUND)
         if(!foundMcq) throw new HttpException('The question is not registered. If you wish to upload it please visit our documentation.', HttpStatus.NOT_FOUND)
             else return foundMcq
+    }
+    getFile(filePath: string): StreamableFile {
+        let fileExistance = fs.existsSync(filePath)
+        if(!fileExistance) throw new HttpException('The file is not found. If you wish to upload it please visit our documentation.', HttpStatus.NOT_FOUND)
+        const file = createReadStream(filePath);
+        return new StreamableFile(file);    
     }
 }
