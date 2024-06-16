@@ -78,8 +78,12 @@ export class QuestionifyService {
                     data: filteredSubjects,
                     statusCode: 200
                 }
-                break
         }
-        return {data: [], statusCode: 200}
+    }
+    getRandom(amount: string, code: string | undefined, board: string | undefined): {data: Array<MCQ>, statusCode: number} {
+        return {
+            data: [],
+            statusCode: 200
+        }
     }
 }
