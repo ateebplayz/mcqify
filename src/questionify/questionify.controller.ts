@@ -2,7 +2,7 @@ import { Controller, Get, Header, HttpException, HttpStatus, Query, Res, Streama
 import { MCQ, Subject } from 'src/modules/classes';
 import { QuestionifyService } from './questionify.service';
 import * as path from 'path';
-import { createReadStream } from 'fs';
+import type { Response } from 'express';
 
 @Controller('questionify')
 export class QuestionifyController {
@@ -13,9 +13,14 @@ export class QuestionifyController {
     }
     @Get('image')
     @Header('Content-Type', 'image/png')
-    @Header('Content-Disposition', 'attachment')
-    getImage(@Query('name') name: string): StreamableFile {
-        return this.questionifyService.getFile(path.join(__dirname, '../../questions', name.substring(0, 4), name))
+    @Header('Content-Disposition', 'attachment; filename="{name}"')
+    getImage(@Query('name') name: string, @Res({ passthrough: true }) res: Response): StreamableFile {
+        console.log(path.join(__dirname, '../../questions', name.substring(0, 4), `${name}.png`))
+        res.set({
+            'Content-Type': 'image/png',
+            'Content-Disposition': `attachment; filename="${name}"`,
+        });
+        return this.questionifyService.getFile(path.join(__dirname, '../../questions', name.substring(0, 4), `${name}`))
     }  
     @Get('list')
     getList(@Query('type') type: 'subjects' | 'boards', @Query('query') query: string | undefined): {data: Array<Subject>, statusCode: number} {

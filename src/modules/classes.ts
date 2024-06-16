@@ -6,7 +6,7 @@ export class MCQ {
      * @example 5070 (The Chemistry for O-Level)
      * @emits number
      */
-    subjectCode: number
+    subjectCode: string
     /**
      * The season of the question.
      * @example 'm' (The February March Session)
@@ -55,7 +55,7 @@ export class MCQ {
 }
 
 export class Subject {
-    code: number
+    code: string
     name: string
     board: 'AS' | 'A' | 'O' | 'IGCSE'
     mcqs: Array<MCQ>
@@ -63,7 +63,7 @@ export class Subject {
 }
 
 export class SubjectBuilder extends Subject {
-    constructor(subjectCode: number, name: string, board: 'AS' | 'A' | 'O' | 'IGCSE', mcqs: Array<MCQ>, topics: Array<string>) {
+    constructor(subjectCode: string, name: string, board: 'AS' | 'A' | 'O' | 'IGCSE', mcqs: Array<MCQ>, topics: Array<string>) {
         super()
         this.code = subjectCode
         this.name = name
@@ -74,11 +74,11 @@ export class SubjectBuilder extends Subject {
 }
 
 export class MCQBuilder extends MCQ {
-    constructor(subjectCode: number, session: 'm' |'s' | 'w', fileName: `${string}.png`, answer: 'A' | 'B' | 'C' | 'D', variant: number, paper: number, year: number, question: number, topic: number) {
+    constructor(subjectCode: string, session: 'm' |'s' | 'w', answer: 'A' | 'B' | 'C' | 'D', variant: number, paper: number, year: number, question: number, topic: number) {
         super()
         this.subjectCode = subjectCode
         this.session = session
-        this.question = `http://localhost:3000/questionify/image/${fileName}`
+        this.question = `http://localhost:3000/questionify/image?name=${subjectCode}_${session}${`${year}`.substring(2, 4)}_qp_${paper}${variant}_q${question}.png`
         this.answer = answer
         this.mcqIdentifier = {
             variant: variant,

@@ -9,7 +9,6 @@ import { iif } from 'rxjs';
 @Injectable()
 export class QuestionifyService {
     async fetchMCQ(codeStr: string, yearStr: string, session: 'm' | 's' | 'w', paperStr: string, variantStr: string, questionStr: string): Promise<MCQ> {
-        let code = Number(codeStr)
         let year = Number(yearStr)
         let paper = Number(paperStr)
         let variant = Number(variantStr)
@@ -20,7 +19,7 @@ export class QuestionifyService {
         if(isNaN(question)) {
             throw new HttpException('Invalid Question Entered. Please make sure it is a valid number.', HttpStatus.BAD_REQUEST)
         }
-        if(isNaN(code) || codeStr.length !== 4) {
+        if(!codeStr || codeStr.length !== 4) {
             throw new HttpException('Invalid Code Entered. Please make sure it is a valid 4 digit number.', HttpStatus.BAD_REQUEST)
         }
         if(isNaN(paper) || paperStr.length !== 1) {
@@ -34,8 +33,9 @@ export class QuestionifyService {
         }
         let foundSubject = false
         let foundMcq: MCQ | null = null
+        console.log(codeStr, year, paper,variant, session, question)
         subjects.forEach(subject => {
-            if(subject.code == code) {
+            if(subject.code == codeStr) {
                 foundSubject = true
                 subject.mcqs.forEach(mcq => {  
                     if(mcq.mcqIdentifier.year == year && mcq.mcqIdentifier.paper == paper && mcq.mcqIdentifier.variant == variant && mcq.session == session && mcq.mcqIdentifier.number == question) {
@@ -44,6 +44,7 @@ export class QuestionifyService {
                 })
             }
         })
+        console.log(foundMcq)
         if(!foundSubject) throw new HttpException('The subject code entered is not registered. If you wish to upload it please visit our documentation.', HttpStatus.NOT_FOUND)
         if(!foundMcq) throw new HttpException('The question is not registered. If you wish to upload it please visit our documentation.', HttpStatus.NOT_FOUND)
             else return foundMcq
