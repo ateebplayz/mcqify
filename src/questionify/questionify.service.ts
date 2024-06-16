@@ -1,9 +1,10 @@
 import { HttpException, HttpStatus, Injectable, StreamableFile } from '@nestjs/common';
-import { MCQ, MCQBuilder } from 'src/modules/classes';
+import { MCQ, MCQBuilder, Subject } from 'src/modules/classes';
 import subjects from '../subjects/main'
 import * as fs from 'fs'
 import * as path from 'path';
 import { createReadStream } from 'fs';
+import { iif } from 'rxjs';
 
 @Injectable()
 export class QuestionifyService {
@@ -52,5 +53,33 @@ export class QuestionifyService {
         if(!fileExistance) throw new HttpException('The file is not found. If you wish to upload it please visit our documentation.', HttpStatus.NOT_FOUND)
         const file = createReadStream(filePath);
         return new StreamableFile(file);    
+    }
+    getList(type: 'subjects' | 'boards', query: string | undefined): {data: Array<Subject>, statusCode: number} {
+        if(!type) throw new HttpException("Invalid list type. Please enter either 'subjects' or 'boards'", HttpStatus.BAD_REQUEST);
+        let listType = type.toLowerCase()
+        if(listType !== 'subjects' && listType !== 'boards') throw new HttpException("Invalid list type. Please enter either 'subjects' or 'boards'", HttpStatus.BAD_REQUEST);
+        switch(type) {
+            case 'subjects': 
+                if(query) {
+                    let nameQueried = subjects.filter(subjects => subjects.name.toLowerCase().startsWith(query.toLowerCase()))
+                    let codeQueried = subjects.filter(subjects => String(subjects.code).toLowerCase().startsWith(query.toLowerCase()))
+                    codeQueried.forEach(codeQuery => nameQueried.push(codeQuery))
+                    return {
+                        data: nameQueried,
+                        statusCode: 200
+                    }
+                }
+                return {data: subjects, statusCode: 200};
+            case 'boards':
+                if(!query) throw new HttpException(`Please enter a query either in the form of 'O', 'A', 'IGCSE' or 'AS'.`, HttpStatus.BAD_REQUEST)
+                if(query.toUpperCase() !== 'O' && query.toUpperCase() !== 'IGCSE' && query.toUpperCase() !== 'A' && query.toUpperCase() !== 'AS') throw new HttpException(`Please enter a query either in the form of 'O', 'A', 'IGCSE' or 'AS'.`, HttpStatus.BAD_REQUEST)
+                let filteredSubjects = subjects.filter(subject => subject.board === query.toUpperCase())
+                return {
+                    data: filteredSubjects,
+                    statusCode: 200
+                }
+                break
+        }
+        return {data: [], statusCode: 200}
     }
 }

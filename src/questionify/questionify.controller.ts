@@ -1,5 +1,5 @@
 import { Controller, Get, Header, HttpException, HttpStatus, Query, Res, StreamableFile } from '@nestjs/common';
-import { MCQ } from 'src/modules/classes';
+import { MCQ, Subject } from 'src/modules/classes';
 import { QuestionifyService } from './questionify.service';
 import * as path from 'path';
 import { createReadStream } from 'fs';
@@ -17,4 +17,8 @@ export class QuestionifyController {
     getImage(@Query('name') name: string): StreamableFile {
         return this.questionifyService.getFile(path.join(__dirname, '../../questions', name.substring(0, 4), name))
     }  
+    @Get('list')
+    getList(@Query('type') type: 'subjects' | 'boards', @Query('query') query: string | undefined): {data: Array<Subject>, statusCode: number} {
+        return this.questionifyService.getList(type, query)
+    }
 }
