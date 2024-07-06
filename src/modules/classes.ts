@@ -63,7 +63,7 @@ export class Subject {
 }
 
 export class SubjectBuilder extends Subject {
-    constructor(subjectCode: string, name: string, board: 'AS' | 'A' | 'O' | 'IGCSE', mcqs: Array<MCQ>, topics: Array<string>) {
+    constructor(subjectCode: string, name: string, board: 'AS' | 'A' | 'O' | 'IGCSE', mcqs: Array<MCQBuilder>, topics: Array<string>) {
         super()
         this.code = subjectCode
         this.name = name

@@ -23,8 +23,8 @@ export class QuestionifyController {
         return this.questionifyService.getFile(path.join(__dirname, '../../questions', name.substring(0, 4), `${name}`))
     }  
     @Get('list')
-    getList(@Query('type') type: 'subjects' | 'boards', @Query('query') query: string | undefined): {data: Array<Subject>, statusCode: number} {
-        return this.questionifyService.getList(type, query)
+    getList(@Query('type') type: 'subjects' | 'boards', @Query('query') query: string | undefined, @Query('mcqify') mcqify: 'y' | undefined): {data: Array<Subject>, statusCode: number} {
+        return this.questionifyService.getList(type, query, mcqify)
     }
     @Get('random')
     getRandom(@Query('amount') amount: string, @Query('code') code: string | undefined, @Query('board') board: string | undefined): {data: Array<MCQ>, statusCode: number} {

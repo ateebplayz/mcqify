@@ -4,7 +4,8 @@ import subjects from '../subjects/main'
 import * as fs from 'fs'
 import * as path from 'path';
 import { createReadStream } from 'fs';
-import { iif } from 'rxjs';
+import { filter, iif } from 'rxjs';
+import questions from '../subjects/main';
 
 @Injectable()
 export class QuestionifyService {
@@ -33,7 +34,6 @@ export class QuestionifyService {
         }
         let foundSubject = false
         let foundMcq: MCQ | null = null
-        console.log(codeStr, year, paper,variant, session, question)
         subjects.forEach(subject => {
             if(subject.code == codeStr) {
                 foundSubject = true
@@ -55,7 +55,7 @@ export class QuestionifyService {
         const file = createReadStream(filePath);
         return new StreamableFile(file);    
     }
-    getList(type: 'subjects' | 'boards', query: string | undefined): {data: Array<Subject>, statusCode: number} {
+    getList(type: 'subjects' | 'boards', query: string | undefined, mcqify: 'y' | undefined): {data: Array<Subject>, statusCode: number} {
         if(!type) throw new HttpException("Invalid list type. Please enter either 'subjects' or 'boards'", HttpStatus.BAD_REQUEST);
         let listType = type.toLowerCase()
         if(listType !== 'subjects' && listType !== 'boards') throw new HttpException("Invalid list type. Please enter either 'subjects' or 'boards'", HttpStatus.BAD_REQUEST);
@@ -75,6 +75,10 @@ export class QuestionifyService {
                 if(!query) throw new HttpException(`Please enter a query either in the form of 'O', 'A', 'IGCSE' or 'AS'.`, HttpStatus.BAD_REQUEST)
                 if(query.toUpperCase() !== 'O' && query.toUpperCase() !== 'IGCSE' && query.toUpperCase() !== 'A' && query.toUpperCase() !== 'AS') throw new HttpException(`Please enter a query either in the form of 'O', 'A', 'IGCSE' or 'AS'.`, HttpStatus.BAD_REQUEST)
                 let filteredSubjects = subjects.filter(subject => subject.board === query.toUpperCase())
+                if (mcqify !== 'y')
+                    filteredSubjects.forEach((s, i) => {
+                        filteredSubjects[i].mcqs = []
+                    })
                 return {
                     data: filteredSubjects,
                     statusCode: 200
@@ -82,8 +86,35 @@ export class QuestionifyService {
         }
     }
     getRandom(amount: string, code: string | undefined, board: string | undefined): {data: Array<MCQ>, statusCode: number} {
+        if(Number(amount) <= 0 || Number(amount) > 250) {
+            throw new HttpException('Invalid amount entered. The maximum amount is 250 MCQs', HttpStatus.BAD_REQUEST)
+        }
+        if(code == undefined) {
+            throw new HttpException('Invalid subject code entered. Please make sure it is a valid 4 digit number.', HttpStatus.BAD_REQUEST)
+        }
+        let foundCode = false
+        subjects.forEach(s => {
+            if(s.code == code) foundCode = true
+        })
+        if(!foundCode) {
+            throw new HttpException('The subject code entered is not registered. If you wish to upload it please visit our documentation.', HttpStatus.NOT_FOUND)
+        }
+        if((board.toUpperCase() !== 'O' && board.toUpperCase() !== 'IGCSE' && board.toUpperCase() !== 'A' && board.toUpperCase() !== 'AS') || board === null || board == undefined) throw new HttpException(`Please enter a query either in the form of 'O', 'A', 'IGCSE' or 'AS'.`, HttpStatus.BAD_REQUEST)
+        let subj = questions.find(question => question.code === code && question.board === board.toUpperCase())
+        let arrayOfIds = []
+        for (let i = 0; i < Number(amount); i++) {
+            let randomNum = Math.floor(Math.random() * subj.mcqs.length)
+            if(arrayOfIds.includes(randomNum)) {
+                randomNum = Math.floor(Math.random() * subj.mcqs.length)
+            }
+            arrayOfIds.push(randomNum)
+        }
+        let mcqs: Array<MCQ> = []
+        arrayOfIds.forEach(id => {
+            mcqs.push(subj.mcqs[id])
+        })
         return {
-            data: [],
+            data: mcqs,
             statusCode: 200
         }
     }
