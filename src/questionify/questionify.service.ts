@@ -1,5 +1,5 @@
 import { HttpException, HttpStatus, Injectable, StreamableFile } from '@nestjs/common';
-import { MCQ, MCQBuilder, Subject } from 'src/modules/classes';
+import {     Subject } from 'src/modules/classes';
 import subjects from '../subjects/main'
 import * as fs from 'fs'
 import * as path from 'path';
@@ -96,11 +96,13 @@ export class QuestionifyService {
         subjects.forEach(s => {
             if(s.code == code) foundCode = true
         })
+        console.log(foundCode)
         if(!foundCode) {
             throw new HttpException('The subject code entered is not registered. If you wish to upload it please visit our documentation.', HttpStatus.NOT_FOUND)
         }
         if((board.toUpperCase() !== 'O' && board.toUpperCase() !== 'IGCSE' && board.toUpperCase() !== 'A' && board.toUpperCase() !== 'AS') || board === null || board == undefined) throw new HttpException(`Please enter a query either in the form of 'O', 'A', 'IGCSE' or 'AS'.`, HttpStatus.BAD_REQUEST)
         let subj = questions.find(question => question.code === code && question.board === board.toUpperCase())
+    console.log(subj)
         let arrayOfIds = []
         for (let i = 0; i < Number(amount); i++) {
             let randomNum = Math.floor(Math.random() * subj.mcqs.length)
@@ -109,10 +111,13 @@ export class QuestionifyService {
             }
             arrayOfIds.push(randomNum)
         }
+        console.log(arrayOfIds)
         let mcqs: Array<MCQ> = []
+        console.log(mcqs)
         arrayOfIds.forEach(id => {
             mcqs.push(subj.mcqs[id])
         })
+        console.log(mcqs)
         return {
             data: mcqs,
             statusCode: 200
