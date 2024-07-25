@@ -1,5 +1,5 @@
 import { HttpException, HttpStatus, Injectable, StreamableFile } from '@nestjs/common';
-import {     Subject } from 'src/modules/classes';
+import {     MCQ, MCQBuilder, Subject } from 'src/modules/classes';
 import subjects from '../subjects/main'
 import * as fs from 'fs'
 import * as path from 'path';
@@ -10,6 +10,7 @@ import questions from '../subjects/main';
 @Injectable()
 export class QuestionifyService {
     async fetchMCQ(codeStr: string, yearStr: string, session: 'm' | 's' | 'w', paperStr: string, variantStr: string, questionStr: string): Promise<MCQ> {
+        /*
         let year = Number(yearStr)
         let paper = Number(paperStr)
         let variant = Number(variantStr)
@@ -47,7 +48,8 @@ export class QuestionifyService {
         console.log(foundMcq)
         if(!foundSubject) throw new HttpException('The subject code entered is not registered. If you wish to upload it please visit our documentation.', HttpStatus.NOT_FOUND)
         if(!foundMcq) throw new HttpException('The question is not registered. If you wish to upload it please visit our documentation.', HttpStatus.NOT_FOUND)
-            else return foundMcq
+            else return foundMcq*/
+        return null
     }
     getFile(filePath: string): StreamableFile {
         let fileExistance = fs.existsSync(filePath)
@@ -55,32 +57,43 @@ export class QuestionifyService {
         const file = createReadStream(filePath);
         return new StreamableFile(file);    
     }
-    getList(type: 'subjects' | 'boards', query: string | undefined, mcqify: 'y' | undefined): {data: Array<Subject>, statusCode: number} {
+    getList(type: 'subjects' | 'boards', query: string | undefined, mcqify: 'y' | undefined): {data: {subject: Subject | Array<Subject>, mcqs: Array<MCQ | null>}, statusCode: number} {
         if(!type) throw new HttpException("Invalid list type. Please enter either 'subjects' or 'boards'", HttpStatus.BAD_REQUEST);
+        if(!query) throw new HttpException("Invalid list type. Please enter either 'subjects' or 'boards'", HttpStatus.BAD_REQUEST);
         let listType = type.toLowerCase()
         if(listType !== 'subjects' && listType !== 'boards') throw new HttpException("Invalid list type. Please enter either 'subjects' or 'boards'", HttpStatus.BAD_REQUEST);
         switch(type) {
             case 'subjects': 
                 if(query) {
-                    let nameQueried = subjects.filter(subjects => subjects.name.toLowerCase().startsWith(query.toLowerCase()))
-                    let codeQueried = subjects.filter(subjects => String(subjects.code).toLowerCase().startsWith(query.toLowerCase()))
-                    codeQueried.forEach(codeQuery => nameQueried.push(codeQuery))
-                    return {
-                        data: nameQueried,
-                        statusCode: 200
-                    }
+                    const subjectsDir = fs.readdirSync(path.join(__dirname, '../../questions'))
+                    if(subjectsDir.includes(query)) {
+                        const mcqsFile = fs.readdirSync(path.join(__dirname, '../../questions', query))
+                        let mcqs: Array<MCQ> = []
+                        if(mcqify == 'y') {
+                            mcqsFile.map(mcq => {
+                                let mcqDeet = mcq.split('_')
+                                mcqs.push(new MCQBuilder(query, mcqDeet[1] as 'm' | 'w' | 's', mcqDeet[2] as 'A' | 'B' | 'C' | 'D', parseInt(mcqDeet[4]), parseInt(mcqDeet[3]), parseInt(mcqDeet[5]), parseInt(mcqDeet[6]), parseInt(mcqDeet[7])))
+                            })
+                        }
+                        return {
+                            data: {
+                                subject: subjects.find(s => s.code == query),
+                                mcqs: mcqs
+                            },
+                            statusCode: 200
+                        }
+                    } else throw new HttpException(`Couldn't find the subject code ${query}.`, HttpStatus.NOT_FOUND)
                 }
-                return {data: subjects, statusCode: 200};
+                return {data: {subject: subjects[0], mcqs: []}, statusCode: 200};
             case 'boards':
                 if(!query) throw new HttpException(`Please enter a query either in the form of 'O', 'A', 'IGCSE' or 'AS'.`, HttpStatus.BAD_REQUEST)
                 if(query.toUpperCase() !== 'O' && query.toUpperCase() !== 'IGCSE' && query.toUpperCase() !== 'A' && query.toUpperCase() !== 'AS') throw new HttpException(`Please enter a query either in the form of 'O', 'A', 'IGCSE' or 'AS'.`, HttpStatus.BAD_REQUEST)
                 let filteredSubjects = subjects.filter(subject => subject.board === query.toUpperCase())
-                if (mcqify !== 'y')
-                    filteredSubjects.forEach((s, i) => {
-                        filteredSubjects[i].mcqs = []
-                    })
                 return {
-                    data: filteredSubjects,
+                    data: {
+                        subject: filteredSubjects,
+                        mcqs: []
+                    },
                     statusCode: 200
                 }
         }
@@ -96,30 +109,30 @@ export class QuestionifyService {
         subjects.forEach(s => {
             if(s.code == code) foundCode = true
         })
-        console.log(foundCode)
         if(!foundCode) {
             throw new HttpException('The subject code entered is not registered. If you wish to upload it please visit our documentation.', HttpStatus.NOT_FOUND)
         }
         if((board.toUpperCase() !== 'O' && board.toUpperCase() !== 'IGCSE' && board.toUpperCase() !== 'A' && board.toUpperCase() !== 'AS') || board === null || board == undefined) throw new HttpException(`Please enter a query either in the form of 'O', 'A', 'IGCSE' or 'AS'.`, HttpStatus.BAD_REQUEST)
-        let subj = questions.find(question => question.code === code && question.board === board.toUpperCase())
-    console.log(subj)
         let arrayOfIds = []
+        let mcqs: Array<MCQ> = []
+        const mcqsFile = fs.readdirSync(path.join(__dirname, '../../questions', code))
+        mcqsFile.map(mcq => {
+            let mcqDeet = mcq.split('_')
+            mcqs.push(new MCQBuilder(code, mcqDeet[1] as 'm' | 'w' | 's', mcqDeet[2] as 'A' | 'B' | 'C' | 'D', parseInt(mcqDeet[4]), parseInt(mcqDeet[3]), parseInt(mcqDeet[5]), parseInt(mcqDeet[6]), parseInt(mcqDeet[7])))
+        })
         for (let i = 0; i < Number(amount); i++) {
-            let randomNum = Math.floor(Math.random() * subj.mcqs.length)
+            let randomNum = Math.floor(Math.random() * mcqs.length)
             if(arrayOfIds.includes(randomNum)) {
-                randomNum = Math.floor(Math.random() * subj.mcqs.length)
+                randomNum = Math.floor(Math.random() * mcqs.length)
             }
             arrayOfIds.push(randomNum)
         }
-        console.log(arrayOfIds)
-        let mcqs: Array<MCQ> = []
-        console.log(mcqs)
+        let mcqsToReturn: Array<MCQ> = []
         arrayOfIds.forEach(id => {
-            mcqs.push(subj.mcqs[id])
+            mcqsToReturn.push(mcqs[id])
         })
-        console.log(mcqs)
         return {
-            data: mcqs,
+            data: mcqsToReturn,
             statusCode: 200
         }
     }

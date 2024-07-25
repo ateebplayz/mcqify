@@ -14,16 +14,16 @@ export class QuestionifyController {
     @Get('image')
     @Header('Content-Type', 'image/png')
     @Header('Content-Disposition', 'attachment; filename="{name}"')
-    getImage(@Query('name') name: string, @Res({ passthrough: true }) res: Response): StreamableFile {
-        console.log(path.join(__dirname, '../../questions', name.substring(0, 4), `${name}.png`))
+    getImage(@Query('name') name: string, @Res({ passthrough: true }) res: Response) {
         res.set({
             'Content-Type': 'image/png',
             'Content-Disposition': `attachment; filename="${name}"`,
         });
-        return this.questionifyService.getFile(path.join(__dirname, '../../questions', name.substring(0, 4), `${name}`))
+        //return this.questionifyService.getFile(path.join(__dirname, '../../questions', name.substring(0, 4), `${name}`))
+        res.sendFile((path.join(__dirname, '../../questions', name.substring(0, 4), `${name}`)))
     }  
     @Get('list')
-    getList(@Query('type') type: 'subjects' | 'boards', @Query('query') query: string | undefined, @Query('mcqify') mcqify: 'y' | undefined): {data: Array<Subject>, statusCode: number} {
+    getList(@Query('type') type: 'subjects' | 'boards', @Query('query') query: string | undefined, @Query('mcqify') mcqify: 'y' | undefined): {data: {subject: Subject | Array<Subject>, mcqs: Array<MCQ | null>}, statusCode: number} {
         return this.questionifyService.getList(type, query, mcqify)
     }
     @Get('random')
