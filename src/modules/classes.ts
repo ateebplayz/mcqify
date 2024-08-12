@@ -76,7 +76,7 @@ export class MCQBuilder extends MCQ {
         super()
         this.subjectCode = subjectCode
         this.session = session
-        this.question = `http://amplyfy.grabyourservices.com:3000/images/${subjectCode}/${subjectCode}_${session}_${answer}_${paper}_${variant}_${year}_${question}_${topic}.png`
+        this.question = `https://amplyfy.grabyourservices.com:9000/images/${subjectCode}/${subjectCode}_${session}_${answer}_${paper}_${variant}_${year}_${question}_${topic}.png`
         this.answer = answer
         this.mcqIdentifier = {
             variant: variant,
