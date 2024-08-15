@@ -57,12 +57,12 @@ export class MCQ {
 export class Subject {
     code: string
     name: string
-    board: 'AS' | 'A' | 'O' | 'IGCSE'
+    board: 'A' | 'IGCSE'
     topics: Array<string>
 }
 
 export class SubjectBuilder extends Subject {
-    constructor(subjectCode: string, name: string, board: 'AS' | 'A' | 'O' | 'IGCSE', topics: Array<string>) {
+    constructor(subjectCode: string, name: string, board: 'A' | 'IGCSE', topics: Array<string>) {
         super()
         this.code = subjectCode
         this.name = name
@@ -72,11 +72,11 @@ export class SubjectBuilder extends Subject {
 }
 
 export class MCQBuilder extends MCQ {
-    constructor(subjectCode: string, session: 'm' |'s' | 'w', answer: 'A' | 'B' | 'C' | 'D', variant: number, paper: number, year: number, question: number, topic: number) {
+    constructor(subjectCode: string, session: 'm' |'s' | 'w', answer: 'A' | 'B' | 'C' | 'D', variant: number, paper: number, year: number, question: number, topic: number, board: 'IGCSE' | 'A') {
         super()
         this.subjectCode = subjectCode
         this.session = session
-        this.question = `https://amplyfy.grabyourservices.com:9000/images/${subjectCode}/${subjectCode}_${session}_${answer}_${paper}_${variant}_${year}_${question}_${topic}.png`
+        this.question = `https://amplyfy.grabyourservices.com:9000/images/${board}/${subjectCode}/${subjectCode}_${session}_${answer}_${paper}_${variant}_${year}_${question}_${topic}.png`
         this.answer = answer
         this.mcqIdentifier = {
             variant: variant,

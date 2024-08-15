@@ -27,7 +27,7 @@ export class QuestionifyController {
         return this.questionifyService.getList(type, query, mcqify)
     }
     @Get('random')
-    getRandom(@Query('amount') amount: string, @Query('code') code: string | undefined, @Query('board') board: string | undefined): {data: Array<MCQ>, statusCode: number} {
+    getRandom(@Query('amount') amount: string, @Query('code') code: string | undefined, @Query('board') board: 'IGCSE' | 'A' | undefined): {data: Array<MCQ>, statusCode: number} {
         return this.questionifyService.getRandom(amount, code, board)
     }
 }
